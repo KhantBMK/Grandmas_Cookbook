@@ -72,11 +72,24 @@ export default function Profile() {
                                     to={`/recipe/${recipe.id}`}
                                     className="flex gap-3 p-3 rounded-xl border-2 border-orange-900/10 hover:border-orange-600 bg-white transition-all group"
                                 >
-                                    <img
-                                        src={recipe.image_url || 'https://images.unsplash.com/photo-1617735605078-8a9336be0816?w=400'}
-                                        alt={recipe.name}
-                                        className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
-                                    />
+                                    {recipe.image_url ? (
+                                        <img
+                                            src={recipe.image_url}
+                                            alt={recipe.name}
+                                            className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                                        />
+                                    ) : (
+                                        <div className="w-16 h-16 rounded-lg flex-shrink-0 bg-orange-50 border border-orange-900/10 flex items-center justify-center">
+                                            <svg viewBox="0 0 64 64" className="w-9 h-9 text-orange-300" fill="currentColor">
+                                                {/* square */}
+                                                <rect x="6" y="34" width="20" height="20" rx="2" />
+                                                {/* triangle */}
+                                                <polygon points="32,10 52,38 12,38" />
+                                                {/* circle */}
+                                                <circle cx="48" cy="46" r="10" />
+                                            </svg>
+                                        </div>
+                                    )}
                                     <div className="flex-1 min-w-0">
                                         <h3 className="text-orange-900 text-sm font-medium group-hover:text-orange-600 transition-colors line-clamp-2">
                                             {recipe.name}
