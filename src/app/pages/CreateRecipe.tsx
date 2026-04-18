@@ -86,10 +86,7 @@ export default function CreateRecipe() {
     const [allTags, setAllTags] = useState<Option[]>([]);
     const [selectedCuisine, setSelectedCuisine] = useState<number | null>(null);
     const [selectedMealType, setSelectedMealType] = useState<number | null>(null);
-    const [addedTags, setAddedTags] = useState<{ id: number | null; name: string }[]>([]);
-    const [tagInput, setTagInput] = useState("");
-    const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
-    const tagRef = useRef<HTMLDivElement>(null);
+    const [selectedTags, setSelectedTags] = useState<number[]>([]);
 
     const [ingredients, setIngredients] = useState<string[]>([]);
     const [newIngredient, setNewIngredient] = useState("");
@@ -121,31 +118,8 @@ export default function CreateRecipe() {
         }
     };
 
-    useEffect(() => {
-        const handler = (e: MouseEvent) => {
-            if (tagRef.current && !tagRef.current.contains(e.target as Node)) setTagDropdownOpen(false);
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, []);
-
-    const tagSuggestions = allTags.filter(t =>
-        t.name.toLowerCase().includes(tagInput.toLowerCase()) &&
-        !addedTags.some(a => a.name.toLowerCase() === t.name.toLowerCase())
-    );
-
-    const addTag = (name: string, id: number | null = null) => {
-        const trimmed = name.trim();
-        if (!trimmed) return;
-        if (addedTags.some(t => t.name.toLowerCase() === trimmed.toLowerCase())) return;
-        const existing = allTags.find(t => t.name.toLowerCase() === trimmed.toLowerCase());
-        setAddedTags(prev => [...prev, { id: existing?.id ?? id, name: existing?.name ?? trimmed }]);
-        setTagInput("");
-        setTagDropdownOpen(false);
-    };
-
-    const removeTag = (name: string) => {
-        setAddedTags(prev => prev.filter(t => t.name !== name));
+    const toggleTag = (id: number) => {
+        setSelectedTags(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
     };
 
     const addIngredient = () => {
@@ -203,8 +177,7 @@ export default function CreateRecipe() {
                 servings: parseInt(servings) || 1,
                 cuisine_id: selectedCuisine,
                 meal_type_id: selectedMealType,
-                tag_ids: addedTags.filter(t => t.id !== null).map(t => t.id),
-                new_tags: addedTags.filter(t => t.id === null).map(t => t.name),
+                tag_ids: selectedTags,
                 ingredients,
                 instructions: directions,
             };
@@ -290,9 +263,7 @@ export default function CreateRecipe() {
                                 type="number"
                                 min="0"
                                 value={prepTime}
-                                onChange={e => { if (/^\d*$/.test(e.target.value)) setPrepTime(e.target.value); }}
-                                onKeyDown={e => { if (!/\d/.test(e.key) && !['Backspace','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Delete','Tab'].includes(e.key)) e.preventDefault(); }}
-                                placeholder="15"
+                                onChange={e => setPrepTime(e.target.value)}
                                 className="w-full border-2 border-orange-900/20 rounded-lg px-4 py-3 focus:outline-none focus:border-orange-600 transition-colors"
                             />
                         </div>
@@ -304,9 +275,7 @@ export default function CreateRecipe() {
                                 type="number"
                                 min="0"
                                 value={cookTime}
-                                onChange={e => { if (/^\d*$/.test(e.target.value)) setCookTime(e.target.value); }}
-                                onKeyDown={e => { if (!/\d/.test(e.key) && !['Backspace','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Delete','Tab'].includes(e.key)) e.preventDefault(); }}
-                                placeholder="30"
+                                onChange={e => setCookTime(e.target.value)}
                                 className="w-full border-2 border-orange-900/20 rounded-lg px-4 py-3 focus:outline-none focus:border-orange-600 transition-colors"
                             />
                         </div>
@@ -319,7 +288,6 @@ export default function CreateRecipe() {
                                 min="1"
                                 value={servings}
                                 onChange={e => setServings(e.target.value)}
-                                placeholder="4"
                                 className="w-full border-2 border-orange-900/20 rounded-lg px-4 py-3 focus:outline-none focus:border-orange-600 transition-colors"
                             />
                         </div>
@@ -338,62 +306,27 @@ export default function CreateRecipe() {
                     </div>
 
                     {/* Dietary Tags */}
-                    <div className="mb-8">
-                        <h2 className="text-2xl text-orange-900 mb-4">Dietary Tags</h2>
-                        {addedTags.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mb-4">
-                                {addedTags.map(tag => (
-                                    <span key={tag.name} className="flex items-center gap-1 px-3 py-1 bg-orange-50 border-2 border-orange-900/20 text-orange-700 rounded-full text-sm">
+                    {allTags.length > 0 && (
+                        <div className="mb-8">
+                            <label className="block text-orange-900 mb-2">Dietary Tags</label>
+                            <div className="flex flex-wrap gap-2">
+                                {allTags.map(tag => (
+                                    <button
+                                        key={tag.id}
+                                        type="button"
+                                        onClick={() => toggleTag(tag.id)}
+                                        className={`px-3 py-1 rounded-full border-2 text-sm transition-all ${
+                                            selectedTags.includes(tag.id)
+                                                ? 'bg-orange-600 border-orange-600 text-white'
+                                                : 'bg-white border-orange-900/20 text-orange-900/70 hover:border-orange-600 hover:text-orange-600'
+                                        }`}
+                                    >
                                         {tag.name}
-                                        <button type="button" onClick={() => removeTag(tag.name)} className="ml-1 text-red-400 hover:text-red-600">
-                                            <X className="w-3 h-3" />
-                                        </button>
-                                    </span>
+                                    </button>
                                 ))}
                             </div>
-                        )}
-                        <div ref={tagRef} className="relative flex gap-2">
-                            <div className="flex-1 relative">
-                                <input
-                                    type="text"
-                                    value={tagInput}
-                                    onChange={e => { setTagInput(e.target.value); setTagDropdownOpen(true); }}
-                                    onFocus={() => setTagDropdownOpen(true)}
-                                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag(tagInput))}
-                                    placeholder="Search or add a tag..."
-                                    className="w-full border-2 border-orange-900/20 rounded-lg px-4 py-2 focus:outline-none focus:border-orange-600 transition-colors"
-                                />
-                                {tagDropdownOpen && (tagSuggestions.length > 0 || tagInput.trim()) && (
-                                    <div className="absolute top-full left-0 right-0 z-20 mt-1 bg-white border-2 border-orange-900/20 rounded-xl shadow-lg overflow-hidden">
-                                        <div className="max-h-48 overflow-y-auto py-1">
-                                            {tagSuggestions.map(tag => (
-                                                <button
-                                                    key={tag.id}
-                                                    type="button"
-                                                    onMouseDown={e => { e.preventDefault(); addTag(tag.name, tag.id); }}
-                                                    className="w-full text-left px-4 py-2 text-sm text-orange-900/70 hover:bg-orange-50 hover:text-orange-600 transition-colors"
-                                                >
-                                                    {tag.name}
-                                                </button>
-                                            ))}
-                                            {tagInput.trim() && !allTags.some(t => t.name.toLowerCase() === tagInput.trim().toLowerCase()) && (
-                                                <button
-                                                    type="button"
-                                                    onMouseDown={e => { e.preventDefault(); addTag(tagInput); }}
-                                                    className="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 transition-colors border-t border-orange-900/10"
-                                                >
-                                                    Add new tag: "<span className="font-medium">{tagInput.trim()}</span>"
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            <button type="button" onClick={() => addTag(tagInput)} className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
-                                <Plus className="w-4 h-4" /> Add
-                            </button>
                         </div>
-                    </div>
+                    )}
 
                     {/* Ingredients */}
                     <div className="mb-8">
@@ -507,7 +440,7 @@ export default function CreateRecipe() {
                             className="bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white px-8 py-3 rounded-lg flex items-center gap-2 transition-colors text-lg"
                         >
                             <Save className="w-5 h-5" />
-                            {submitting ? 'Saving...' : 'Save Recipe'}
+                            {submitting ? 'Creating...' : 'Create'}
                         </button>
                     </div>
                 </div>

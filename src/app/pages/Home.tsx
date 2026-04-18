@@ -4,8 +4,6 @@ import { Link } from "react-router";
 import { Navigation } from "../components/Navigation";
 import { api } from "../../api";
 
-const authorImage = "https://images.unsplash.com/photo-1545379537-5d1275c630fe?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmaXZlJTIwY29sbGVnZSUyMHN0dWRlbnRzJTIwdGVhbSUyMHdvcmtpbmclMjB0b2dldGhlcnxlbnwxfHx8fDE3NzM5MTI5NjN8MA&ixlib=rb-4.1.0&q=80&w=1080";
-
 interface Recipe {
     id: number;
     name: string;
@@ -69,11 +67,13 @@ export default function Home() {
                     <Link to="/about" className="block group">
                         <div className="border-2 border-orange-900/20 rounded-3xl overflow-hidden bg-white hover:border-orange-600 transition-all h-full">
                             <div className="aspect-[4/3] overflow-hidden relative">
-                                <img
-                                    src={authorImage}
-                                    alt="About the team"
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                />
+                                <div className="w-full h-full bg-orange-50 flex items-center justify-center">
+                                    <svg viewBox="0 0 64 64" className="w-24 h-24 text-orange-300" fill="currentColor">
+                                        <rect x="6" y="34" width="20" height="20" rx="2" />
+                                        <polygon points="32,10 52,38 12,38" />
+                                        <circle cx="48" cy="46" r="10" />
+                                    </svg>
+                                </div>
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end justify-center p-6">
                                     <h2 className="text-2xl text-white group-hover:text-orange-300 transition-colors">Meet the Team</h2>
                                 </div>
