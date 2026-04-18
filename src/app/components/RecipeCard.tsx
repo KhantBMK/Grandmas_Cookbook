@@ -24,7 +24,11 @@ export default function RecipeCard({ id, name, image_url, cook_time, servings, c
                         />
                     ) : (
                         <div className="w-full h-full bg-orange-50 flex items-center justify-center">
-                            <span className="text-orange-900/40 text-sm">No image provided</span>
+                            <svg viewBox="0 0 64 64" className="w-2/5 h-2/5 text-orange-300" fill="currentColor">
+                                <rect x="6" y="34" width="20" height="20" rx="2" />
+                                <polygon points="32,10 52,38 12,38" />
+                                <circle cx="48" cy="46" r="10" />
+                            </svg>
                         </div>
                     )}
                 </div>

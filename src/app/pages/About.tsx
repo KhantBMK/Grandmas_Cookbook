@@ -1,8 +1,6 @@
 import { Navigation } from "../components/Navigation";
 import { Mail, MapPin, Calendar } from "lucide-react";
 
-const authorImage = "https://images.unsplash.com/photo-1545379537-5d1275c630fe?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmaXZlJTIwY29sbGVnZSUyMHN0dWRlbnRzJTIwdGVhbSUyMHdvcmtpbmclMjB0b2dldGhlcnxlbnwxfHx8fDE3NzM5MTI5NjN8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral";
-
 export default function About() {
   return (
     <div className="min-h-screen bg-[#f5f1e8]">
@@ -14,12 +12,12 @@ export default function About() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             {/* Author Image */}
-            <div className="border-2 border-orange-900/20 rounded-2xl overflow-hidden">
-              <img 
-                src={authorImage} 
-                alt="Chef portrait" 
-                className="w-full h-full object-cover aspect-square"
-              />
+            <div className="border-2 border-orange-900/20 rounded-2xl overflow-hidden aspect-square bg-orange-50 flex items-center justify-center">
+              <svg viewBox="0 0 64 64" className="w-2/5 h-2/5 text-orange-300" fill="currentColor">
+                <rect x="6" y="34" width="20" height="20" rx="2" />
+                <polygon points="32,10 52,38 12,38" />
+                <circle cx="48" cy="46" r="10" />
+              </svg>
             </div>
 
             {/* Author Info */}
