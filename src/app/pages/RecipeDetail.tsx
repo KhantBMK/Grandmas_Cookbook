@@ -28,7 +28,6 @@ export default function RecipeDetail() {
     const [recipe, setRecipe] = useState<Recipe | null>(null);
     const [loading, setLoading] = useState(true);
     const [saved, setSaved] = useState(false);
-    const [multiplier, setMultiplier] = useState(1);
 
     useEffect(() => {
         api.get(`/recipes/${id}`).then(data => {
@@ -62,14 +61,6 @@ export default function RecipeDetail() {
         if (!confirm('Delete this recipe?')) return;
         await api.delete(`/recipes/${id}`, true);
         navigate('/search');
-    };
-
-    const scaleIngredient = (text: string, scale: number): string => {
-        if (scale === 1) return text;
-        return text.replace(/(\d+(?:\.\d+)?)/g, (match) => {
-            const scaled = parseFloat(match) * scale;
-            return scaled % 1 === 0 ? String(scaled) : scaled.toFixed(1);
-        });
     };
 
     if (loading) return (
@@ -161,27 +152,12 @@ export default function RecipeDetail() {
                 {/* Ingredients & Instructions */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div className="border-2 border-orange-900/20 rounded-3xl p-8 bg-white">
-                        <div className="flex items-center justify-between mb-6 pb-3 border-b-2 border-orange-900/20">
-                            <h2 className="text-2xl text-orange-900">Ingredients</h2>
-                            <div className="flex items-center gap-2">
-                                {[1, 2, 4, 8].map(n => (
-                                    <button
-                                        key={n}
-                                        onClick={() => setMultiplier(n)}
-                                        className={`px-3 py-1 rounded-lg text-sm transition-all ${
-                                            multiplier === n ? 'bg-orange-600 text-white' : 'bg-white border-2 border-orange-900/20 text-orange-900/70 hover:border-orange-600 hover:text-orange-600'
-                                        }`}
-                                    >
-                                        {n}x
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                        <h2 className="text-2xl text-orange-900 mb-6 pb-3 border-b-2 border-orange-900/20">Ingredients</h2>
                         <ul className="space-y-3">
                             {recipe.ingredients.map(ing => (
                                 <li key={ing.id} className="flex items-start gap-3 text-orange-900/80">
                                     <span className="text-orange-600 mt-1">•</span>
-                                    <span>{scaleIngredient(ing.ingredient_desc, multiplier)}</span>
+                                    <span>{ing.ingredient_desc}</span>
                                 </li>
                             ))}
                         </ul>
