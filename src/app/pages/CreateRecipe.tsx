@@ -1,13 +1,126 @@
 import { Navigation } from "../components/Navigation";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { Clock, Users, Upload, Plus, X, Save, ChevronDown } from "lucide-react";
+import { Clock, Users, Upload, Plus, X, ChevronDown } from "lucide-react";
 import { api } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 
 interface Option {
     id: number;
     name: string;
+}
+
+function levenshtein(a: string, b: string): number {
+    const m = a.length, n = b.length;
+    const dp: number[][] = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+    for (let i = 1; i <= m; i++)
+        for (let j = 1; j <= n; j++)
+            dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    return dp[m][n];
+}
+
+function TagCombobox({
+    allTags,
+    selectedTags,
+    onAdd,
+    onRemove,
+}: {
+    allTags: Option[];
+    selectedTags: number[];
+    onAdd: (id: number) => void;
+    onRemove: (id: number) => void;
+}) {
+    const [query, setQuery] = useState("");
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    const unselected = allTags.filter(t => !selectedTags.includes(t.id));
+
+    const suggestions = query.trim()
+        ? [...unselected]
+            .map(t => ({ tag: t, score: levenshtein(query.toLowerCase(), t.name.toLowerCase()) }))
+            .sort((a, b) => {
+                const aContains = a.tag.name.toLowerCase().includes(query.toLowerCase());
+                const bContains = b.tag.name.toLowerCase().includes(query.toLowerCase());
+                if (aContains !== bContains) return aContains ? -1 : 1;
+                return a.score - b.score;
+            })
+            .map(x => x.tag)
+        : unselected;
+
+    const addByQuery = () => {
+        if (suggestions.length > 0) {
+            onAdd(suggestions[0].id);
+            setQuery("");
+            setOpen(false);
+        }
+    };
+
+    return (
+        <div>
+            {selectedTags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                    {selectedTags.map(id => {
+                        const tag = allTags.find(t => t.id === id);
+                        if (!tag) return null;
+                        return (
+                            <span key={id} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white text-sm rounded-full">
+                                {tag.name}
+                                <button type="button" onClick={() => onRemove(id)} className="hover:text-orange-200 transition-colors">
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </span>
+                        );
+                    })}
+                </div>
+            )}
+            <div ref={ref} className="relative flex gap-2">
+                <div className="flex-1 relative">
+                    <input
+                        type="text"
+                        value={query}
+                        onChange={e => { setQuery(e.target.value); setOpen(true); }}
+                        onFocus={() => setOpen(true)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addByQuery(); } }}
+                        placeholder="Search tags..."
+                        className="w-full border-2 border-orange-900/20 rounded-lg px-4 py-2 focus:outline-none focus:border-orange-600 transition-colors"
+                    />
+                    {open && suggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 z-20 mt-1 bg-white border-2 border-orange-900/20 rounded-xl shadow-lg overflow-hidden">
+                            <div className="max-h-40 overflow-y-auto py-1">
+                                {suggestions.map(tag => (
+                                    <button
+                                        key={tag.id}
+                                        type="button"
+                                        onClick={() => { onAdd(tag.id); setQuery(""); setOpen(false); }}
+                                        className="w-full text-left px-4 py-2 text-sm text-orange-900/70 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                                    >
+                                        {tag.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+                <button
+                    type="button"
+                    onClick={addByQuery}
+                    className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                >
+                    <Plus className="w-4 h-4" /> Add
+                </button>
+            </div>
+        </div>
+    );
 }
 
 function Select({
@@ -116,10 +229,6 @@ export default function CreateRecipe() {
             reader.onloadend = () => setImagePreview(reader.result as string);
             reader.readAsDataURL(file);
         }
-    };
-
-    const toggleTag = (id: number) => {
-        setSelectedTags(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
     };
 
     const addIngredient = () => {
@@ -305,28 +414,16 @@ export default function CreateRecipe() {
                         />
                     </div>
 
-                    {/* Dietary Tags */}
-                    {allTags.length > 0 && (
-                        <div className="mb-8">
-                            <label className="block text-orange-900 mb-2">Dietary Tags</label>
-                            <div className="flex flex-wrap gap-2">
-                                {allTags.map(tag => (
-                                    <button
-                                        key={tag.id}
-                                        type="button"
-                                        onClick={() => toggleTag(tag.id)}
-                                        className={`px-3 py-1 rounded-full border-2 text-sm transition-all ${
-                                            selectedTags.includes(tag.id)
-                                                ? 'bg-orange-600 border-orange-600 text-white'
-                                                : 'bg-white border-orange-900/20 text-orange-900/70 hover:border-orange-600 hover:text-orange-600'
-                                        }`}
-                                    >
-                                        {tag.name}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                    {/* Tags */}
+                    <div className="mb-8">
+                        <h2 className="text-2xl text-orange-900 mb-4">Tags</h2>
+                        <TagCombobox
+                            allTags={allTags}
+                            selectedTags={selectedTags}
+                            onAdd={id => setSelectedTags(prev => [...prev, id])}
+                            onRemove={id => setSelectedTags(prev => prev.filter(t => t !== id))}
+                        />
+                    </div>
 
                     {/* Ingredients */}
                     <div className="mb-8">
@@ -439,7 +536,6 @@ export default function CreateRecipe() {
                             disabled={submitting}
                             className="bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white px-8 py-3 rounded-lg flex items-center gap-2 transition-colors text-lg"
                         >
-                            <Save className="w-5 h-5" />
                             {submitting ? 'Creating...' : 'Create'}
                         </button>
                     </div>
