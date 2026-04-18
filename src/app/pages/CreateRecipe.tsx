@@ -1,7 +1,7 @@
 import { Navigation } from "../components/Navigation";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { Clock, Users, Upload, Plus, X, ChevronDown } from "lucide-react";
+import { Clock, Users, Upload, Plus, X } from "lucide-react";
 import { api } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 
@@ -134,37 +134,49 @@ function Select({
     value: number | null;
     onChange: (id: number | null) => void;
 }) {
+    const [query, setQuery] = useState("");
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        const selected = options.find(o => o.id === value);
+        setQuery(selected?.name ?? "");
+    }, [value, options]);
+
+    useEffect(() => {
         const handler = (e: MouseEvent) => {
-            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+            if (ref.current && !ref.current.contains(e.target as Node)) {
+                setOpen(false);
+                const selected = options.find(o => o.id === value);
+                setQuery(selected?.name ?? "");
+            }
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
-    }, []);
+    }, [value, options]);
 
-    const selected = options.find(o => o.id === value);
+    const filtered = query.trim() && !options.find(o => o.id === value && o.name === query)
+        ? options.filter(o => o.name.toLowerCase().includes(query.toLowerCase()))
+        : options;
 
     return (
         <div ref={ref} className="relative">
-            <button
-                type="button"
-                onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between border-2 border-orange-900/20 rounded-lg px-4 py-3 bg-white text-left focus:outline-none focus:border-orange-600 transition-colors"
-            >
-                <span className={selected ? 'text-orange-900' : 'text-orange-900/40'}>{selected?.name ?? label}</span>
-                <ChevronDown className={`w-4 h-4 text-orange-900/40 transition-transform ${open ? 'rotate-180' : ''}`} />
-            </button>
-            {open && (
+            <input
+                type="text"
+                value={query}
+                onChange={e => { setQuery(e.target.value); onChange(null); setOpen(true); }}
+                onFocus={() => setOpen(true)}
+                placeholder={label}
+                className="w-full border-2 border-orange-900/20 rounded-lg px-4 py-3 focus:outline-none focus:border-orange-600 transition-colors"
+            />
+            {open && filtered.length > 0 && (
                 <div className="absolute top-full left-0 right-0 z-20 mt-1 bg-white border-2 border-orange-900/20 rounded-xl shadow-lg overflow-hidden">
                     <div className="max-h-48 overflow-y-auto py-1">
-                        {options.map(option => (
+                        {filtered.map(option => (
                             <button
                                 key={option.id}
                                 type="button"
-                                onClick={() => { onChange(option.id); setOpen(false); }}
+                                onClick={() => { onChange(option.id); setQuery(option.name); setOpen(false); }}
                                 className={`w-full text-left px-4 py-2 text-sm transition-colors ${
                                     value === option.id
                                         ? 'bg-orange-50 text-orange-600 font-medium'

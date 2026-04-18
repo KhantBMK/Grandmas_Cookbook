@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { Navigation } from "../components/Navigation";
-import { Clock, Users, Bookmark, Share2, ChefHat, Trash2 } from "lucide-react";
+import { Clock, Users, Bookmark, ChefHat, Trash2 } from "lucide-react";
 import { api } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 
@@ -92,18 +92,12 @@ export default function RecipeDetail() {
             <div className="max-w-7xl mx-auto px-6 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                     {/* Image */}
-                    <div className="border-2 border-orange-900/20 rounded-3xl overflow-hidden aspect-square">
-                        {recipe.image_url ? (
-                            <img
-                                src={recipe.image_url}
-                                alt={recipe.name}
-                                className="w-full h-full object-cover"
-                            />
-                        ) : (
-                            <div className="w-full h-full bg-orange-50 flex items-center justify-center">
-                                <span className="text-orange-900/40 text-lg">No image provided</span>
-                            </div>
-                        )}
+                    <div className="border-2 border-orange-900/20 rounded-3xl overflow-hidden">
+                        <img
+                            src={recipe.image_url || 'https://images.unsplash.com/photo-1617735605078-8a9336be0816?w=800'}
+                            alt={recipe.name}
+                            className="w-full aspect-square object-cover"
+                        />
                     </div>
 
                     {/* Info */}
@@ -161,10 +155,6 @@ export default function RecipeDetail() {
                             </div>
                         )}
 
-                        <button className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
-                            <Share2 className="w-5 h-5" />
-                            Share Recipe
-                        </button>
                     </div>
                 </div>
 
